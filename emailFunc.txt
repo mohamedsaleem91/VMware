@@ -1,0 +1,55 @@
+Function sendEmail($emailSubject, $emailBody, $toAddress, $isbodyhtml, $attachment)
+{
+	<#
+		.SYNOPSIS
+		This functions helps you send emails to the specified recipients list.
+		
+		.DESCRIPTION
+		Use this function to send emails to the specified recipients list.
+		
+		.PARAMETER  emailSubject
+		The email subject will have the full dorm report or healthcheck results
+		
+		.PARAMETER  emailBody
+		The email body will have the full content of the output file or the health check summary results.
+		
+		.EXAMPLE
+		sendEmail $emailSubject $emailBody
+	#>
+	$smtp= New-Object System.Net.Mail.SmtpClient($GLOBAL:SMTPMailServer, 25);
+	$msg = New-Object System.Net.Mail.MailMessage $fromAddress, $toAddress, $emailSubject, $emailBody 
+	
+    if($attachment -eq $true)
+    {
+        if($htmlformat -eq "True")
+        {
+            $msg.Attachments.Add($GLOBAL:OutputFile)
+        }
+        if($excelformat -eq "True")
+        {
+            $msg.Attachments.Add($GLOBAL:ExcelFile)
+        }
+    }
+	if($isbodyhtml -eq "True")
+    {
+		$msg.isBodyHTML = $True
+	}
+    else
+    {
+		$msg.isBodyHTML = $false
+	}
+	
+	$smtp.send($msg) 
+	if($?)
+	{		
+		$comment =  "Email sent succesfully to $toAddress with the subject $emailSubject`r`n"
+		logErrorMessage "$comment"
+		
+	}
+	else 
+    {
+		$comment =  "Error while sending mail. `r`n"
+		logErrorMessage "$comment"
+		New-ErrorLog -Category "#redfontSend Mailfont#" -Message "#redfontError while sending mail. #"	
+	}
+} 
